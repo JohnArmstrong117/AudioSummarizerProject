@@ -188,4 +188,4 @@ Potential improvements:
 - Custom summary templates
 - Language detection and translation
 - Integration with phone systems
-- Mobile app version 
+- Mobile app version
