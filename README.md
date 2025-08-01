@@ -2,6 +2,8 @@
 
 A modern web application that automatically transcribes voicemail audio files and generates intelligent summaries while preserving all critical information.
 
+🌐 **Live Demo**: [https://web-production-beef.up.railway.app/](https://web-production-beef.up.railway.app/)
+
 ## ✨ Features
 
 - **Audio Transcription**: Converts audio files to text using OpenAI's Whisper API
@@ -115,6 +117,9 @@ The application uses two OpenAI APIs:
 - HTTPS is recommended for production deployment
 
 ## 🚀 Deployment
+
+### Live Application
+This application is currently deployed and live at: [https://web-production-beef.up.railway.app/](https://web-production-beef.up.railway.app/)
 
 ### Local Development
 ```bash
