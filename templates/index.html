@@ -219,7 +219,7 @@
                 <div class="upload-text">Drag & drop your audio file here</div>
                 <div class="upload-hint">or click to browse (MP3, WAV, M4A, OGG, FLAC, AAC)</div>
                 <input type="file" id="fileInput" class="file-input" accept="audio/*">
-                <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                <button class="btn" id="chooseFileBtn">Choose File</button>
             </div>
         </div>
 
@@ -247,6 +247,7 @@
     <script>
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
+        const chooseFileBtn = document.getElementById('chooseFileBtn');
         const loading = document.getElementById('loading');
         const results = document.getElementById('results');
         const fileInfo = document.getElementById('fileInfo');
@@ -272,8 +273,18 @@
             }
         });
 
-        uploadArea.addEventListener('click', () => {
+        // Button click handler (prevent double-trigger)
+        chooseFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the upload area click from also firing
             fileInput.click();
+        });
+
+        // Upload area click handler (for clicking anywhere else in the area)
+        uploadArea.addEventListener('click', (e) => {
+            // Only trigger if the click wasn't on the button
+            if (e.target !== chooseFileBtn && !chooseFileBtn.contains(e.target)) {
+                fileInput.click();
+            }
         });
 
         fileInput.addEventListener('change', (e) => {
