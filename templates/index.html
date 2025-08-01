@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voicemail Summarizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            padding: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #4facfe;
+            background: #e6f3ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            padding: 40px;
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .result-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border-left-color: #ff4444;
+            color: #d32f2f;
+        }
+
+        .success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .file-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-section, .results {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Voicemail Summarizer</h1>
+            <p>Upload your voicemail audio and get an intelligent summary with all critical information preserved</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drag & drop your audio file here</div>
+                <div class="upload-hint">or click to browse (MP3, WAV, M4A, OGG, FLAC, AAC)</div>
+                <input type="file" id="fileInput" class="file-input" accept="audio/*">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Processing your voicemail...</h3>
+            <p>This may take a few moments depending on the file size</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="file-info" id="fileInfo"></div>
+            
+            <div class="result-section">
+                <h3 class="result-title">📝 Summary</h3>
+                <div class="result-content" id="summaryContent"></div>
+            </div>
+
+            <div class="result-section">
+                <h3 class="result-title">🎧 Full Transcript</h3>
+                <div class="result-content" id="transcriptContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const fileInfo = document.getElementById('fileInfo');
+        const summaryContent = document.getElementById('summaryContent');
+        const transcriptContent = document.getElementById('transcriptContent');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Debug: Log file information
+            console.log('File selected:', file.name);
+            console.log('File type:', file.type);
+            console.log('File size:', file.size);
+            
+            // Validate file type - check both MIME type and file extension
+            const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', 'audio/flac', 'audio/aac', 'audio/mpeg'];
+            const allowedExtensions = ['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac'];
+            
+            // Get file extension
+            const fileName = file.name.toLowerCase();
+            const fileExtension = fileName.split('.').pop();
+            
+            console.log('File extension:', fileExtension);
+            
+            // Check if file type is valid (either MIME type or extension)
+            const isValidMimeType = allowedTypes.includes(file.type);
+            const isValidExtension = allowedExtensions.includes(fileExtension);
+            
+            console.log('Is valid MIME type:', isValidMimeType);
+            console.log('Is valid extension:', isValidExtension);
+            
+            if (!isValidExtension) {
+                showError('Please select a valid audio file (MP3, WAV, M4A, OGG, FLAC, AAC)');
+                return;
+            }
+
+            // Show file info
+            showFileInfo(file);
+
+            // Show loading
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            // Upload file
+            uploadFile(file);
+        }
+
+        function showFileInfo(file) {
+            const size = (file.size / 1024 / 1024).toFixed(2);
+            fileInfo.innerHTML = `
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">Size: ${size} MB</div>
+            `;
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('audio_file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    showResults(data);
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showError('An error occurred while processing your file. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+
+        function showResults(data) {
+            results.style.display = 'block';
+            summaryContent.innerHTML = data.summary.replace(/\n/g, '<br>');
+            transcriptContent.innerHTML = data.transcript.replace(/\n/g, '<br>');
+            
+            // Scroll to results
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showError(message) {
+            results.style.display = 'block';
+            summaryContent.innerHTML = `<div class="error">❌ ${message}</div>`;
+            transcriptContent.innerHTML = '';
+        }
+    </script>
+</body>
+</html> 
